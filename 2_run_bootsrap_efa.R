@@ -16,6 +16,10 @@ set.seed(123)
 # Define the number of bootstrap iterations
 n_iterations <- 1000
 
+# Define the upper and lower thresholds to filter items based on their factor loadings
+upper_threshold = 0.6
+lower_threshold = -0.6
+
 # Load variables from last script
 determine_factors <- readRDS("determine_factors.rds")
 
@@ -200,3 +204,49 @@ for (factor in factors) {
   heatmap <- generate_heatmap(combined_summary, factor)
   print(heatmap)
 }
+
+# Filter items in a data frame based on factor loadings
+filter_factor_items <- function(df1, df2, upper_threshold, lower_threshold) {
+  
+  # Define a helper function that will filter and rename columns in a data frame.
+  filter_and_rename <- function(df, threshold, mean_name, ci_name) {
+    # Filter the data frame based on the mean column values and threshold.
+    # We also create a new CI column here that combines lower and upper values.
+    df <- df %>% 
+      filter(mean > upper_threshold | mean < lower_threshold) %>%
+      mutate(CI = paste0("[", round(lower, 3), ", ", round(upper, 3), "]")) %>%
+      select(Item, Factor, mean, CI)
+    
+    # Rename the mean and CI columns for clarity.
+    names(df)[3:4] <- c(mean_name, ci_name)
+    return(df)
+  }
+  
+  # Define required columns.
+  required_columns <- c("Item", "Factor", "mean", "lower", "upper")
+  # Check if both df1 and df2 contain required columns, else throw an error.
+  if (!all(required_columns %in% names(df1)) | !all(required_columns %in% names(df2))) {
+    stop("Both df1 and df2 should contain columns: Item, Factor, mean, lower, upper")
+  }
+  
+  # Use the helper function to filter and rename columns in df1 and df2.
+  items1 <- filter_and_rename(df1, upper_threshold, "mean.df1", "CI.df1")
+  items2 <- filter_and_rename(df2, lower_threshold, "mean.df2", "CI.df2")
+  
+  # Identify items that are common in both summaries.
+  common_items <- items1 %>% inner_join(items2, by = c("Item", "Factor"))
+  
+  # If there are no common items, create an empty data frame with the same column names.
+  if (nrow(common_items) == 0) {
+    common_items <- data.frame(Item=character(), Factor=character(), mean.df1=numeric(), CI.df1=character(), mean.df2=numeric(), CI.df2=character())
+  }
+  
+  # Return the common_items data frame.
+  return(common_items)
+}
+
+# Filter items and save
+common_items <- filter_factor_items(inpain_summary, painfree_summary, upper_threshold, lower_threshold)
+print(common_items)
+saveRDS(common_items, "common_items.rds")
+
