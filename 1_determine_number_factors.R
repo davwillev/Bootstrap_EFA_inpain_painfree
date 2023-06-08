@@ -12,7 +12,7 @@ lapply(packages, function(x) {
 set.seed(123)
 
 # Define the number of bootstrap iterations
-n_iterations <- 10 # Change to 1000 for actual analysis
+n_iterations <- 10 # Very slow but change to 1000 for actual analysis
 
 # Define a function to handle missing data
 handle_missing_data <- function(df) {
@@ -112,5 +112,8 @@ n_factors_painfree <- decide_on_factors(painfree_suggested_factors)
 saveRDS(list(n_factors_inpain = n_factors_inpain,
              n_factors_painfree = n_factors_painfree,
              inpain_suggested_factors = inpain_suggested_factors,
-             painfree_suggested_factors = painfree_suggested_factors),
-        file = "important_variables.rds")
+             painfree_suggested_factors = painfree_suggested_factors,
+             inpain_df = inpain.df, 
+             painfree_df = painfree.df),
+        file = "determine_factors.rds")
+
