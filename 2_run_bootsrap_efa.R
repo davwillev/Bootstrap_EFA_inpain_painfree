@@ -125,6 +125,9 @@ bootstrap_efa <- function(data, n_iterations, target_loadings) {
 inpain_efa <- bootstrap_efa(inpain.df, n_iterations, efa_full_inpain$loadings)
 painfree_efa <- bootstrap_efa(painfree.df, n_iterations, efa_full_painfree$loadings)
 
+saveRDS(inpain_efa, "inpain_efa.rds")
+saveRDS(painfree_efa, "painfree_efa.rds")
+
 # Analyze loadings and create heatmaps
 analyze_loadings <- function(loadings_list, group_name) {
   loadings_df <- do.call(rbind, lapply(loadings_list, function(x) {
