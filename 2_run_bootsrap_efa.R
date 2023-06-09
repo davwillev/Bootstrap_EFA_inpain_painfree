@@ -31,13 +31,6 @@ painfree_suggested_factors <- determine_factors$painfree_suggested_factors
 common_items <- readRDS("common_items.rds")
 prev_num_common_items <- common_items$num_common_items
 
-#Check number of common items previously identified
-if (file.exists("num_common_items.rds")) {
-  prev_num_common_items <- readRDS("num_common_items.rds")
-} else {
-  prev_num_common_items <- 0
-}
-
 # Run EFA with the fixed number of factors to establish the factor structure
 efa_full_inpain <- fa(inpain.df, nfactors = n_factors_inpain, rotate = "oblimin", fm = "minres")
 efa_full_painfree <- fa(painfree.df, nfactors = n_factors_painfree, rotate = "oblimin", fm = "minres")

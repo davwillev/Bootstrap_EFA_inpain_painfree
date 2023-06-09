@@ -44,7 +44,7 @@ create_cfa_model <- function(items, factor_name) {
 model <- create_cfa_model(common_items_list, 'F1')
 print(model)
 
-# Multi-group CFA
+# Perform multi-group CFA
 fit <- cfa(model, data = combined.df, group = "group")
 
 # Check for measurement invariance across the two groups
@@ -52,5 +52,9 @@ fit.configural <- cfa(model, data = combined.df, group = "group")
 fit.metric <- update(fit.configural, group.equal = "loadings")
 fit.scalar <- update(fit.metric, group.equal = "intercepts")
 
-# CFA Evaluation and Refinement
-summary(fit, fit.measures = TRUE)
+# CFA evaluation
+cfa_summary <- summary(fit, fit.measures = TRUE)
+print(cfa_summary)
+
+# Save CFA summary to text file
+capture.output(summary(fit, fit.measures = TRUE), file = paste0(script_dir, "/cfa_summary.txt"))
