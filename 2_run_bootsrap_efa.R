@@ -250,3 +250,5 @@ common_items <- filter_factor_items(inpain_summary, painfree_summary, upper_thre
 print(common_items)
 saveRDS(common_items, "common_items.rds")
 
+saveRDS(inpain.df, "inpain_df.rds")
+saveRDS(painfree.df, "painfree_df.rds")
