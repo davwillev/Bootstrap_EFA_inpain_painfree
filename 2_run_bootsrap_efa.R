@@ -17,10 +17,10 @@ set.seed(123)
 n_iterations <- 1000
 
 # Define the upper and lower thresholds to filter items based on their factor loadings
-upper_threshold = 0.5
-lower_threshold = -0.5
+upper_threshold = 0.3
+lower_threshold = -0.3
 
-# Load variables from last script
+# Load variables from RDS
 determine_factors <- readRDS("determine_factors.rds")
 inpain.df <- determine_factors$inpain_df
 painfree.df <- determine_factors$painfree_df
