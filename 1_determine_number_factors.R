@@ -8,25 +8,17 @@ lapply(packages, function(x) {
   }
 })
 
+# Load variables from last script
+import_data <- readRDS("import_data.rds")
+
+inpain.df <- import_data$inpain_df
+painfree.df <- import_data$painfree_df
+
 # Set seed for reproducibility
 set.seed(123)
 
 # Define the number of bootstrap iterations
 n_iterations <- 10 # Very slow but change to 1000 for actual analysis
-
-# Define a function to handle missing data
-handle_missing_data <- function(df) {
-  df <- df %>% mutate(across(everything(), ~ ifelse(is.na(.), mean(., na.rm = TRUE), .)))
-  return(df)
-}
-
-# Import datasets
-inpain.df <- read_csv('/Users/davidevans/Library/CloudStorage/OneDrive-Personal/My Projects/UBham/Pain-agnositc Qs in painful subjects/EFA/GPT/inpain.csv')
-painfree.df <- read_csv('/Users/davidevans/Library/CloudStorage/OneDrive-Personal/My Projects/UBham/Pain-agnositc Qs in painful subjects/EFA/GPT/painfree.csv')
-
-# Handle missing data
-inpain.df <- handle_missing_data(inpain.df)
-painfree.df <- handle_missing_data(painfree.df)
 
 # Determine the number of factors to retain using MAP criterion
 bootstrap_map <- function(data, n_iterations) {
