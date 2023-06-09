@@ -14,9 +14,10 @@ set.seed(123)
 # Define the number of bootstrap iterations
 n_iterations <- 10 # Very slow but change to 1000 for actual analysis
 
-# Load data from last script
+# Load data from RDS files
 inpain.df <- readRDS("inpain_df.rds")
 painfree.df <- readRDS("painfree_df.rds")
+
 inpain_summary <- readRDS("inpain_summary.rds")
 painfree_summary <- readRDS("painfree_summary.rds")
 combined_summary <- readRDS("combined_summary.rds")
@@ -26,14 +27,7 @@ painfree_efa <- readRDS("painfree_efa.rds")
 combined_summary <- readRDS("combined_summary.rds")
 common_items <- readRDS("common_items.rds")
 
-# Get the list of common items
-common_items_list <- unique(common_items$Item)
-
-# Filter the original data frames
-inpain.df <- inpain.df[, common_items_list]
-painfree.df <- painfree.df[, common_items_list]
-
-# Add 'group' variable
+# Add 'group' variable to each dataframe
 inpain.df$group <- 'inpain'
 painfree.df$group <- 'painfree'
 

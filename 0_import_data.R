@@ -21,7 +21,6 @@ painfree.df <- read_csv('/Users/davidevans/Library/CloudStorage/OneDrive-Persona
 inpain.df <- handle_missing_data(inpain.df)
 painfree.df <- handle_missing_data(painfree.df)
 
-# Save important variables into RDS file
-saveRDS(list(inpain_df = inpain.df, 
-             painfree_df = painfree.df),
-        file = "import_data.rds")
+# Save each dataframe to an RDS file
+saveRDS(inpain.df, "inpain_df.rds")
+saveRDS(painfree.df, "painfree_df.rds")

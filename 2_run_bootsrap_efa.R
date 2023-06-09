@@ -17,18 +17,17 @@ set.seed(123)
 n_iterations <- 1000
 
 # Define the upper and lower thresholds to filter items based on their factor loadings
-upper_threshold = 0.6
-lower_threshold = -0.6
+upper_threshold = 0.5
+lower_threshold = -0.5
 
 # Load variables from last script
 determine_factors <- readRDS("determine_factors.rds")
-
+inpain.df <- determine_factors$inpain_df
+painfree.df <- determine_factors$painfree_df
 n_factors_inpain <- determine_factors$n_factors_inpain
 n_factors_painfree <- determine_factors$n_factors_painfree
 inpain_suggested_factors <- determine_factors$inpain_suggested_factors
 painfree_suggested_factors <- determine_factors$painfree_suggested_factors
-inpain.df <- determine_factors$inpain_df
-painfree.df <- determine_factors$painfree_df
 
 # Run EFA with the fixed number of factors to establish the factor structure
 efa_full_inpain <- fa(inpain.df, nfactors = n_factors_inpain, rotate = "oblimin", fm = "minres")
@@ -250,5 +249,13 @@ common_items <- filter_factor_items(inpain_summary, painfree_summary, upper_thre
 print(common_items)
 saveRDS(common_items, "common_items.rds")
 
+# Get the list of common items
+common_items_list <- unique(common_items$Item)
+
+# Filter the original data frames
+inpain.df <- inpain.df[, common_items_list]
+painfree.df <- painfree.df[, common_items_list]
+
+# Save each dataframe to an RDS file
 saveRDS(inpain.df, "inpain_df.rds")
 saveRDS(painfree.df, "painfree_df.rds")

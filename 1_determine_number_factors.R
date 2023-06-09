@@ -8,11 +8,9 @@ lapply(packages, function(x) {
   }
 })
 
-# Load variables from last script
-import_data <- readRDS("import_data.rds")
-
-inpain.df <- import_data$inpain_df
-painfree.df <- import_data$painfree_df
+# Load data from RDS files
+inpain.df <- readRDS("inpain_df.rds")
+painfree.df <- readRDS("painfree_df.rds")
 
 # Set seed for reproducibility
 set.seed(123)
@@ -108,4 +106,3 @@ saveRDS(list(n_factors_inpain = n_factors_inpain,
              inpain_df = inpain.df, 
              painfree_df = painfree.df),
         file = "determine_factors.rds")
-
