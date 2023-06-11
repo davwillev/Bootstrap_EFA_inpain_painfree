@@ -102,8 +102,11 @@ generate_combined_scree_plot <- function(loadings_summary) {
               lower = mean(lower, na.rm = TRUE),  # Lower bound of 95% CI
               upper = mean(upper, na.rm = TRUE),  # Upper bound of 95% CI
               .groups = 'drop') %>%
-    arrange(Group, desc(mean_loading)) %>%
-    mutate(Factor = factor(Factor, levels = Factor))  # To keep the factors in descending order in the plot
+    arrange(Group, desc(mean_loading))
+  
+  # Check for and handle duplicated factor levels
+  scree_data <- scree_data %>%
+    mutate(Factor = factor(Factor, levels = unique(Factor))) # The levels are in the order they first appear in scree_data
   
   # Generate the scree plot
   scree_plot <- ggplot(scree_data, aes(x = Factor, y = mean_loading, color = Group)) +
@@ -209,6 +212,10 @@ inpain_avg_residmat <- procrustes_results_inpain$avg_residmat
 
 painfree_summary <- procrustes_results_painfree$summary
 painfree_avg_residmat <- procrustes_results_painfree$avg_residmat
+
+# Print the summaries to check for 'Item' column
+print(inpain_summary)
+print(painfree_summary)
 
 # Filter items in a data frame based on factor loadings
 filter_factor_items <- function(df1, df2, upper_threshold, lower_threshold) {

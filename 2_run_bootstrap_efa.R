@@ -25,9 +25,13 @@ n_factors_painfree <- determine_factors$n_factors_painfree
 inpain_suggested_factors <- determine_factors$inpain_suggested_factors
 painfree_suggested_factors <- determine_factors$painfree_suggested_factors
 
-# Run EFA with the fixed number of factors to establish the factor structure
+# Run EFA with a fixed number of factors to establish the factor structure
 efa_full_inpain <- fa(inpain.df, nfactors = n_factors_inpain, rotate = "oblimin", fm = "minres")
 efa_full_painfree <- fa(painfree.df, nfactors = n_factors_painfree, rotate = "oblimin", fm = "minres")
+
+# Print initial EFA
+print(efa_full_inpain)
+print(efa_full_painfree)
 
 # Function to perform EFA
 perform_efa <- function(data, target_loadings, iter) {
@@ -51,7 +55,6 @@ perform_procrustes <- function(f, target_loadings, iter, rotation_type = 'obliqu
     print(paste("WARNING in Procrustes rotation at iteration ", iter, ": ", w$message))
     return(NULL)
   })
-  
   # If Procrustes rotation was successful, proceed with the analysis
   if(!is.null(procrustes_result)){
     # Print the factor loadings after Procrustes rotation
