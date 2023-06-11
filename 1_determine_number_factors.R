@@ -49,15 +49,11 @@ bootstrap_map <- function(data, n_iterations) {
     # The optimal number of factors is the one that minimizes the MAP value
     suggested_factors[i] <- which.min(map_values)
     
-    # Save intermediate output
-    saveRDS(list(map_values = map_values, suggested_factors = suggested_factors),
-            file = paste0("bootstrap_", i, "_map.rds"))
-    
     # Print progress information
     print(paste("Iteration", i, ": Retaining", suggested_factors[i], "factors"))
   }
   
-  # The function returns the number of factors suggested in each bootstrap sample
+  # Return the number of factors suggested in each bootstrap sample
   return(suggested_factors)
 }
 
