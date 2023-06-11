@@ -52,12 +52,14 @@ check_condition <- function(prev_num_common_items, num_common_items) {
 # Ensure other R scripts are in same directory as current script
 script_1 <- file.path(script_dir, "1_determine_number_factors.R")
 script_2 <- file.path(script_dir, "2_run_bootstrap_efa.R")
-script_3 <- file.path(script_dir, "3_multi_group_cfa.R")
+script_3 <- file.path(script_dir, "3_analyze_bootstrap_efa.R")
+script_4 <- file.path(script_dir, "4_multi_group_cfa.R")
 
 # Loop over scripts 1 and 2 until condition is met
 while(TRUE){
   source(script_1)
   source(script_2)
+  source(script_3)
   
   num_common_items <- readRDS("num_common_items.rds")
   
@@ -69,4 +71,4 @@ while(TRUE){
 }
 
 # Once condition is met, run script 3
-source(script_3)
+source(script_4)
