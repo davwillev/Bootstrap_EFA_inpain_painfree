@@ -18,27 +18,38 @@ lower_threshold = -0.3
 inpain_efa <- readRDS("inpain_efa.rds")
 painfree_efa <- readRDS("painfree_efa.rds")
 determine_factors <- readRDS("determine_factors.rds")
+inpain.df <- determine_factors$inpain_df
+painfree.df <- determine_factors$painfree_df
 n_factors_inpain <- determine_factors$n_factors_inpain
 n_factors_painfree <- determine_factors$n_factors_painfree
 
-# Analyze loadings and create heatmaps
 analyze_loadings <- function(loadings_list, group_name) {
+  # Loop over each element of the loadings_list and perform some transformations
   loadings_df <- do.call(rbind, lapply(loadings_list, function(x) {
+    # If the element is not NULL, proceed with the transformations
     if(!is.null(x)){
+      # Extract the loadings dataframe from the list element
       loadings = x$loadings_df
+      # If all the values in loadings are NA, print a warning and return NULL
       if(all(is.na(loadings))){
         print(paste("All values in loadings are NA for group", group_name))
         return(NULL)
       }
+      # Create a dataframe from the loadings dataframe with item names as a separate column
       df = data.frame(Item = rownames(loadings), loadings)
+      # Convert the dataframe from wide format to long format with a separate row for each item and factor
       df <- df %>% pivot_longer(cols = -Item, names_to = "Factor", values_to = "Loading")
+      # Return the transformed dataframe
       return(df)
     }
   }))
+  
+  # Add a new column to the dataframe to indicate the group
   loadings_df$Group <- group_name
   print("Printing loadings_df after adding Group:")
   print(head(loadings_df))
   
+  # Summarise the loadings dataframe by calculating mean, sd, and 95% confidence interval for each item and factor
   loadings_summary <- loadings_df %>%
     group_by(Item, Factor, Group) %>%
     summarise(mean = mean(Loading, na.rm = TRUE), 
@@ -50,6 +61,7 @@ analyze_loadings <- function(loadings_list, group_name) {
   print("Printing loadings_summary after summarising:")
   print(head(loadings_summary))
   
+  # Return the summary dataframe
   return(loadings_summary)
 }
 
@@ -91,7 +103,10 @@ saveRDS(factors, "factors.rds")
 # Generate a heatmap for each factor
 for (factor in factors) {
   heatmap <- generate_heatmap(combined_summary, factor)
+  
+  # Print and save the heatmap to a PDF
   print(heatmap)
+  ggsave(paste0("heatmap_", factor, ".pdf"), plot = heatmap, device = "pdf", width = 8.3, height = 11.7)
 }
 
 generate_combined_scree_plot <- function(loadings_summary) {
@@ -207,15 +222,15 @@ procrustes_results_inpain <- analyze_procrustes_results(inpain_efa, "inpain")
 procrustes_results_painfree <- analyze_procrustes_results(painfree_efa, "painfree")
 
 # Store the summary and average residual data frames in separate variables
-inpain_summary <- procrustes_results_inpain$summary
+inpain_procrustes_summary <- procrustes_results_inpain$summary
 inpain_avg_residmat <- procrustes_results_inpain$avg_residmat
 
-painfree_summary <- procrustes_results_painfree$summary
+painfree_procrustes_summary <- procrustes_results_painfree$summary
 painfree_avg_residmat <- procrustes_results_painfree$avg_residmat
 
-# Print the summaries to check for 'Item' column
-print(inpain_summary)
-print(painfree_summary)
+# Print the procrustes summaries
+print(inpain_procrustes_summary)
+print(painfree_procrustes_summary)
 
 # Filter items in a data frame based on factor loadings
 filter_factor_items <- function(df1, df2, upper_threshold, lower_threshold) {
