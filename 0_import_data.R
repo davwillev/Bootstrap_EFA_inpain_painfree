@@ -14,7 +14,6 @@ library(rstudioapi)
 # Get the directory of the current script
 script_dir <- normalizePath(dirname(rstudioapi::getActiveDocumentContext()$path))
 
-
 # Import data from CSV files (ensure these are in same directory as current script)
 inpain.df <- read_csv(file.path(script_dir, 'inpain.csv'))
 painfree.df <- read_csv(file.path(script_dir, 'painfree.csv'))
@@ -36,6 +35,7 @@ saveRDS(painfree.df, "painfree_df.rds")
 # Check if any items common to both datasets have already been identified
 if (file.exists("num_common_items.rds")) {
   prev_num_common_items <- readRDS("num_common_items.rds")
+  inpain.df <- determine_factors$inpain_df
 } else {
   prev_num_common_items <- 0
 }
@@ -65,7 +65,6 @@ while(TRUE){
   if (check_condition(prev_num_common_items, num_common_items)) {
     break
   }
-  
   prev_num_common_items <- num_common_items
 }
 
