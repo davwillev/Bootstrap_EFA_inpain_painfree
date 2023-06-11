@@ -230,7 +230,9 @@ painfree_avg_residmat <- procrustes_results_painfree$avg_residmat
 
 # Print the procrustes summaries
 print(inpain_procrustes_summary)
+print(inpain_avg_residmat)
 print(painfree_procrustes_summary)
+print(painfree_avg_residmat)
 
 # Filter items in a data frame based on factor loadings
 filter_factor_items <- function(df1, df2, upper_threshold, lower_threshold) {
