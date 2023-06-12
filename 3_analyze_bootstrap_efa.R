@@ -149,8 +149,8 @@ analyze_eigenvalues <- function(efa_list, group_name) {
   return(eigenvalues_summary)
 }
 
-# Define a function that creates a scree plot from eigenvalues
-generate_scree_plot <- function(eigenvalues_summary) {
+# Define a function that creates a scree plot from mean eigenvalues
+generate_scree_plot <- function(eigenvalues_summary, iteration_number) {
   # Generate the scree plot
   scree_plot <- ggplot(eigenvalues_summary, aes(x = Factor, y = mean, color = Group)) +
     geom_line(aes(group = Group)) +
@@ -158,6 +158,13 @@ generate_scree_plot <- function(eigenvalues_summary) {
     geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.6, color = "black", size = 0.3) +
     labs(title = "Scree Plot", x = "Factor", y = "Eigenvalue") +
     theme_minimal()
+  
+  # Create a filename using the iteration number
+  filename <- paste0("scree_plot_", iteration_number, ".pdf")
+  
+  # Print and save the plot to a PDF
+  print(scree_plot)
+  ggsave(filename, plot = scree_plot, device = "pdf")
   
   return(scree_plot)
 }
@@ -170,8 +177,7 @@ painfree_eigenvalues_summary <- analyze_eigenvalues(painfree_efa, "Pain Free")
 combined_eigenvalues_summary <- rbind(inpain_eigenvalues_summary, painfree_eigenvalues_summary)
 
 # Generate scree plot
-scree_plot <- generate_scree_plot(combined_eigenvalues_summary)
-print(scree_plot)
+scree_plot <- generate_scree_plot(combined_eigenvalues_summary, iteration_number)
 
 # Define a function to create a plot of mean factor loadings
 generate_mean_loadings_plot <- function(loadings_summary, iteration_number) {
@@ -301,8 +307,8 @@ painfree_avg_residmat <- procrustes_results_painfree$avg_residmat
 
 # Print the procrustes summaries
 print(inpain_procrustes_summary)
-print(inpain_avg_residmat)
 print(painfree_procrustes_summary)
+print(inpain_avg_residmat)
 print(painfree_avg_residmat)
 
 # Filter items in a data frame based on factor loadings
