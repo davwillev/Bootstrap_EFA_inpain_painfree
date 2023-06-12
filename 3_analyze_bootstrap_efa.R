@@ -74,7 +74,7 @@ painfree_summary <- analyze_loadings(painfree_efa, "Pain Free")
 saveRDS(painfree_summary, "painfree_summary.rds")
 
 # Function to generate heatmap based on loadings_summary for a specific factor
-generate_heatmap <- function(loadings_summary, factor_name) {
+generate_heatmap <- function(loadings_summary, factor_name, iteration_number) {
   # Filter the summary for the specific factor
   loadings_summary <- loadings_summary %>% filter(Factor == factor_name)
   
@@ -88,7 +88,7 @@ generate_heatmap <- function(loadings_summary, factor_name) {
     scale_fill_gradient2(low = "blue", high = "red", mid = "white", midpoint = 0, limit = c(-1, 1), space = "Lab", name="Loading") +
     theme_minimal() +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-    labs(title = paste("Average Factor Loadings for", factor_name), x = "Group", y = "Item")
+    labs(title = paste("Average Factor Loadings for", factor_name, "- Iteration", iteration_number), x = "Group", y = "Item")
   
   return(heatmap_plot)
 }
@@ -103,7 +103,7 @@ saveRDS(factors, "factors.rds")
 
 # Generate a heatmap for each factor
 for (factor in factors) {
-  heatmap <- generate_heatmap(combined_summary, factor)
+  heatmap <- generate_heatmap(combined_summary, factor, iteration_number)
   
   # Create a filename using the iteration number and factor
   filename <- paste0("heatmap_", factor, "_", iteration_number, ".pdf")
@@ -156,7 +156,7 @@ generate_scree_plot <- function(eigenvalues_summary, iteration_number) {
     geom_line(aes(group = Group)) +
     geom_point() +
     geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.6, color = "black", size = 0.3) +
-    labs(title = "Scree Plot", x = "Factor", y = "Eigenvalue") +
+    labs(title = paste("Scree Plot - Iteration", iteration_number), x = "Factor", y = "Eigenvalue") +
     theme_minimal()
   
   # Create a filename using the iteration number
@@ -199,7 +199,7 @@ generate_mean_loadings_plot <- function(loadings_summary, iteration_number) {
     geom_point() +
     geom_line() +
     geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
-    labs(title = "Mean Factor Loadings for Combined Data", x = "Factor", y = "Mean Loading") +
+    labs(title = paste("Mean Factor Loadings for Combined Data - Iteration", iteration_number), x = "Factor", y = "Mean Loading") +
     theme_minimal()
   
   # Create a filename using the iteration number

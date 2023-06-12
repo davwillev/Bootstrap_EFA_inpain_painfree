@@ -80,7 +80,7 @@ create_nfactors_hist <- function(iteration_number, combined_df) {
     geom_histogram(binwidth = 1, color = "black", fill = "white") +
     scale_x_continuous(breaks = seq(floor(min(combined_df$SuggestedFactors)), ceiling(max(combined_df$SuggestedFactors)), by = 1)) +
     facet_grid(. ~ Group) +
-    labs(title = "Suggested Number of Factors", x = "Number of Factors", y = "Count")
+    labs(title = paste("Suggested Number of Factors - Iteration", iteration_number), x = "Number of Factors", y = "Count")
   
   # Create a filename using the iteration number
   filename <- paste0("nfactors_histogram_", iteration_number, ".pdf")
