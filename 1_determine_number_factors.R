@@ -73,15 +73,15 @@ combined_df <- rbind(
 )
 
 # Plot histograms of number of factors side by side
-p <- ggplot(combined_df, aes(x = SuggestedFactors)) +
+nfactors_hist <- ggplot(combined_df, aes(x = SuggestedFactors)) +
   geom_histogram(binwidth = 1, color = "black", fill = "white") +
   scale_x_continuous(breaks = seq(floor(min(combined_df$SuggestedFactors)), ceiling(max(combined_df$SuggestedFactors)), by = 1)) +
   facet_grid(. ~ Group) +
   labs(title = "Suggested Number of Factors", x = "Number of Factors", y = "Count")
 
-# Print and ave the plot to a PDF
-print(p)
-ggsave("my_histogram.pdf", plot = p, device = "pdf")
+# Print and save the plot to a PDF
+print(nfactors_hist)
+ggsave("nfactors_histogram.pdf", plot = nfactors_hist, device = "pdf")
 
 # Function to decide on the number of factors to retain
 decide_on_factors <- function(suggested_factors) {
