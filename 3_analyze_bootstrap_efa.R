@@ -123,7 +123,9 @@ analyze_eigenvalues <- function(efa_list, group_name) {
         return(NULL)
       }
       # Define factor names as MR1, MR2 etc. based on the length of eigenvalues
-      factor_names <- paste0("MR", seq_along(eigenvalues))
+      factor_names <- factor(paste0("MR", seq_along(eigenvalues)), 
+                             levels = paste0("MR", seq_len(length(eigenvalues))))
+      
       df = data.frame(Factor = factor_names, Eigenvalue = eigenvalues)
       return(df)
     }
@@ -151,9 +153,9 @@ analyze_eigenvalues <- function(efa_list, group_name) {
 generate_scree_plot <- function(eigenvalues_summary) {
   # Generate the scree plot
   scree_plot <- ggplot(eigenvalues_summary, aes(x = Factor, y = mean, color = Group)) +
-    geom_line() +
+    geom_line(aes(group = Group)) +
     geom_point() +
-    geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+    geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.6, color = "black", size = 0.3) +
     labs(title = "Scree Plot", x = "Factor", y = "Eigenvalue") +
     theme_minimal()
   
@@ -164,12 +166,12 @@ generate_scree_plot <- function(eigenvalues_summary) {
 inpain_eigenvalues_summary <- analyze_eigenvalues(inpain_efa, "In Pain")
 painfree_eigenvalues_summary <- analyze_eigenvalues(painfree_efa, "Pain Free")
 
-# Combine the summaries
+# Combine both summaries into one dataframe
 combined_eigenvalues_summary <- rbind(inpain_eigenvalues_summary, painfree_eigenvalues_summary)
 
-# Generate scree plot for the combined summary
-combined_scree_plot <- generate_scree_plot(combined_eigenvalues_summary)
-print(combined_scree_plot)
+# Generate scree plot
+scree_plot <- generate_scree_plot(combined_eigenvalues_summary)
+print(scree_plot)
 
 # Define a function to create a plot of mean factor loadings
 generate_mean_loadings_plot <- function(loadings_summary, iteration_number) {
