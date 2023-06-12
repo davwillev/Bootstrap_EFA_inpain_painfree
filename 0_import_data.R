@@ -55,8 +55,16 @@ script_2 <- file.path(script_dir, "2_run_bootstrap_efa.R")
 script_3 <- file.path(script_dir, "3_analyze_bootstrap_efa.R")
 script_4 <- file.path(script_dir, "4_multi_group_cfa.R")
 
+# Initialize the iteration counter
+iteration_number <- 1
+
 # Loop over scripts 1 and 2 until condition is met
 while(TRUE){
+  
+  # Write the iteration number to a temporary RDS file
+  saveRDS(iteration_number, "iteration_number.rds")
+  
+  # Run these scripts and pass script_params list to the sourced scripts
   source(script_1)
   source(script_2)
   source(script_3)
@@ -67,8 +75,15 @@ while(TRUE){
   if (check_condition(prev_num_common_items, num_common_items)) {
     break
   }
+  # Assign current number of common items
   prev_num_common_items <- num_common_items
+  
+  # Increment the iteration counter
+  iteration_number <- iteration_number + 1
 }
 
 # Once condition is met, run script 3
 source(script_4)
+
+# Delete temporary RDS file
+file.remove("iteration_number.rds")

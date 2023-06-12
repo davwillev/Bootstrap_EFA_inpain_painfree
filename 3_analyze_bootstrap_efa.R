@@ -15,6 +15,7 @@ upper_threshold = 0.3
 lower_threshold = -0.3
 
 # Load data from RDS
+iteration_number <- readRDS("iteration_number.rds")
 inpain_efa <- readRDS("inpain_efa.rds")
 painfree_efa <- readRDS("painfree_efa.rds")
 determine_factors <- readRDS("determine_factors.rds")
@@ -104,14 +105,76 @@ saveRDS(factors, "factors.rds")
 for (factor in factors) {
   heatmap <- generate_heatmap(combined_summary, factor)
   
+  # Create a filename using the iteration number and factor
+  filename <- paste0("heatmap_", factor, "_", iteration_number, ".pdf")
+  
   # Print and save the heatmap to a PDF
   print(heatmap)
-  ggsave(paste0("heatmap_", factor, ".pdf"), plot = heatmap, device = "pdf", width = 8.3, height = 11.7)
+  ggsave(filename, plot = heatmap, device = "pdf", width = 8.3, height = 11.7)
 }
 
-generate_combined_scree_plot <- function(loadings_summary) {
+analyze_eigenvalues <- function(efa_list, group_name) {
+  # Extract the eigenvalues from each EFA result and convert them to a data frame
+  eigenvalues_list <- lapply(efa_list, function(x) {
+    if(!is.null(x)) {
+      eigenvalues <- x$eigenvalues
+      if(all(is.na(eigenvalues))){
+        print(paste("All values in eigenvalues are NA for group", group_name))
+        return(NULL)
+      }
+      # Define factor names as MR1, MR2 etc. based on the length of eigenvalues
+      factor_names <- paste0("MR", seq_along(eigenvalues))
+      df = data.frame(Factor = factor_names, Eigenvalue = eigenvalues)
+      return(df)
+    }
+  })
+  
+  # Combine all eigenvalues dataframes into one
+  eigenvalues_df <- do.call(rbind, eigenvalues_list)
+  
+  # Add a new column to the dataframe to indicate the group
+  eigenvalues_df$Group <- group_name
+  
+  # Summarise the eigenvalues dataframe by calculating mean, sd, and 95% confidence interval for each factor
+  eigenvalues_summary <- eigenvalues_df %>%
+    group_by(Factor, Group) %>%
+    summarise(mean = mean(Eigenvalue, na.rm = TRUE), 
+              sd = sd(Eigenvalue, na.rm = TRUE), 
+              lower = mean - qt(0.975, length(Eigenvalue)-1)*sd/sqrt(length(Eigenvalue)),  # Lower bound of 95% CI
+              upper = mean + qt(0.975, length(Eigenvalue)-1)*sd/sqrt(length(Eigenvalue)),  # Upper bound of 95% CI
+              .groups = 'drop')
+  
+  return(eigenvalues_summary)
+}
+
+# Define a function that creates a scree plot from eigenvalues
+generate_scree_plot <- function(eigenvalues_summary) {
+  # Generate the scree plot
+  scree_plot <- ggplot(eigenvalues_summary, aes(x = Factor, y = mean, color = Group)) +
+    geom_line() +
+    geom_point() +
+    geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
+    labs(title = "Scree Plot", x = "Factor", y = "Eigenvalue") +
+    theme_minimal()
+  
+  return(scree_plot)
+}
+
+# Analyze eigenvalues for both datasets
+inpain_eigenvalues_summary <- analyze_eigenvalues(inpain_efa, "In Pain")
+painfree_eigenvalues_summary <- analyze_eigenvalues(painfree_efa, "Pain Free")
+
+# Combine the summaries
+combined_eigenvalues_summary <- rbind(inpain_eigenvalues_summary, painfree_eigenvalues_summary)
+
+# Generate scree plot for the combined summary
+combined_scree_plot <- generate_scree_plot(combined_eigenvalues_summary)
+print(combined_scree_plot)
+
+# Define a function to create a plot of mean factor loadings
+generate_mean_loadings_plot <- function(loadings_summary, iteration_number) {
   # Aggregate mean loadings for each factor and group
-  scree_data <- loadings_summary %>%
+  loadings_data <- loadings_summary %>%
     group_by(Factor, Group) %>%
     summarise(mean_loading = mean(mean, na.rm = TRUE),
               lower = mean(lower, na.rm = TRUE),  # Lower bound of 95% CI
@@ -120,23 +183,29 @@ generate_combined_scree_plot <- function(loadings_summary) {
     arrange(Group, desc(mean_loading))
   
   # Check for and handle duplicated factor levels
-  scree_data <- scree_data %>%
+  loadings_data <- loadings_data %>%
     mutate(Factor = factor(Factor, levels = unique(Factor))) # The levels are in the order they first appear in scree_data
   
-  # Generate the scree plot
-  scree_plot <- ggplot(scree_data, aes(x = Factor, y = mean_loading, color = Group)) +
+  # Generate the plot of mean factor loadings
+  loadings_plot <- ggplot(loadings_data, aes(x = Factor, y = mean_loading, color = Group)) +
     geom_point() +
     geom_line() +
     geom_errorbar(aes(ymin = lower, ymax = upper), width = 0.2) +
-    labs(title = "Scree Plot for Combined Data", x = "Factor", y = "Mean Loading") +
+    labs(title = "Mean Factor Loadings for Combined Data", x = "Factor", y = "Mean Loading") +
     theme_minimal()
   
-  return(scree_plot)
+  # Create a filename using the iteration number
+  filename <- paste0("loadings_plot_", iteration_number, ".pdf")
+  
+  # Print and save the plot to a PDF
+  print(loadings_plot)
+  ggsave(filename, plot = loadings_plot, device = "pdf")
+  
+  return(loadings_plot)
 }
 
-# Generate scree plot for the combined summary
-combined_scree_plot <- generate_combined_scree_plot(combined_summary)
-print(combined_scree_plot)
+# Generate the plot for the combined summary
+combined_loadings_plot <- generate_mean_loadings_plot(combined_summary, iteration_number)
 
 average_residuals <- function(residmat_list) {
   # Get the number of items from the dimensions of the first residual matrix

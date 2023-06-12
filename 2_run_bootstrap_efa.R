@@ -14,9 +14,10 @@ lapply(packages, function(x) {
 set.seed(123)
 
 # Define the number of bootstrap iterations
-n_iterations <- 1000
+boot_iterations <- 1000
 
 # Load data from RDS
+iteration_number <- readRDS("iteration_number.rds")
 determine_factors <- readRDS("determine_factors.rds")
 inpain.df <- determine_factors$inpain_df
 painfree.df <- determine_factors$painfree_df
@@ -70,7 +71,7 @@ perform_procrustes <- function(f, target_loadings, iter, rotation_type = 'obliqu
 }
 
 # Define a function to perform EFA and extract the suggested number of factors
-efa_func <- function(data, target_loadings, n_iterations, rotation_type = 'oblique', verbose = TRUE) {
+efa_func <- function(data, target_loadings, boot_iterations, rotation_type = 'oblique', verbose = TRUE) {
   iter = 1
   repeat {
     # Print the iteration number
@@ -97,6 +98,7 @@ efa_func <- function(data, target_loadings, n_iterations, rotation_type = 'obliq
         # Include additional results from Procrustes rotation in the output
         result_list <- list(
           'loadings_df' = loadings_df,
+          'eigenvalues' = efa$values,
           'congruence' = procrustes_result$congruence,
           'rmsr' = procrustes_result$rmsr,
           'residmat' = procrustes_result$residmat
@@ -108,7 +110,7 @@ efa_func <- function(data, target_loadings, n_iterations, rotation_type = 'obliq
     iter <- iter + 1
     
     # If the maximum number of iterations has been reached, print a message and break the loop
-    if(iter > n_iterations){
+    if(iter > boot_iterations){
       print(paste("EFA finished at iteration", iter - 1))
       break
     }
@@ -118,14 +120,15 @@ efa_func <- function(data, target_loadings, n_iterations, rotation_type = 'obliq
 }
 
 # Define a function to bootstrap EFA
-bootstrap_efa <- function(data, n_iterations, target_loadings) {
-  results_list <- vector("list", n_iterations)
-  for (i in 1:n_iterations) {
+bootstrap_efa <- function(data, boot_iterations, target_loadings) {
+  results_list <- vector("list", boot_iterations)
+  for (i in 1:boot_iterations) {
     print(paste("Bootstrap EFA iteration ", i))
-    efa_results <- efa_func(data, target_loadings, n_iterations)
+    efa_results <- efa_func(data, target_loadings, boot_iterations)
     if(!is.null(efa_results)){
       results_list[[i]] <- list(
         'loadings_df' = efa_results$loadings_df,
+        'eigenvalues' = efa_results$eigenvalues,
         'congruence' = efa_results$congruence,
         'rmsr' = efa_results$rmsr,
         'residmat' = efa_results$residmat
@@ -138,8 +141,8 @@ bootstrap_efa <- function(data, n_iterations, target_loadings) {
 }
 
 # Bootstrap EFA with Procrustes rotation to the established structure
-inpain_efa <- bootstrap_efa(inpain.df, n_iterations, efa_full_inpain$loadings)
-painfree_efa <- bootstrap_efa(painfree.df, n_iterations, efa_full_painfree$loadings)
+inpain_efa <- bootstrap_efa(inpain.df, boot_iterations, efa_full_inpain$loadings)
+painfree_efa <- bootstrap_efa(painfree.df, boot_iterations, efa_full_painfree$loadings)
 
 # Save each dataframe to an RDS file
 saveRDS(inpain_efa, "inpain_efa.rds")

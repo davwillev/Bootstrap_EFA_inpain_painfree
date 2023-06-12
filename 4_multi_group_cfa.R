@@ -8,12 +8,6 @@ lapply(packages, function(x) {
   }
 })
 
-# Set seed for reproducibility
-set.seed(123)
-
-# Define the number of bootstrap iterations
-n_iterations <- 10 # Very slow but change to 1000 for actual analysis
-
 # Load data from RDS files
 inpain.df <- readRDS("inpain_df.rds")
 painfree.df <- readRDS("painfree_df.rds")

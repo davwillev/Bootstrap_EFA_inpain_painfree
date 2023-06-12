@@ -11,23 +11,24 @@ lapply(packages, function(x) {
 # Load data from RDS files
 inpain.df <- readRDS("inpain_df.rds")
 painfree.df <- readRDS("painfree_df.rds")
+iteration_number <- readRDS("iteration_number.rds")
 
 # Set seed for reproducibility
 set.seed(123)
 
 # Define the number of bootstrap iterations
-n_iterations <- 10 # Very slow but change to 1000 for actual analysis
+boot_iterations <- 10 # Very slow but change to 1000 for actual analysis
 
 # Determine the number of factors to retain using MAP criterion
-bootstrap_map <- function(data, n_iterations) {
+bootstrap_map <- function(data, boot_iterations) {
   # Determine the maximum number of factors
   n_factors <- min(nrow(data), ncol(data))
   
   # Initialize an array to hold the number of factors suggested in each bootstrap sample
-  suggested_factors <- vector("numeric", n_iterations)
+  suggested_factors <- vector("numeric", boot_iterations)
   
   # Iterate over bootstrap samples
-  for (i in 1:n_iterations) {  
+  for (i in 1:boot_iterations) {  
     # Resample data with replacement
     indices <- sample(1:nrow(data), replace = TRUE)
     resample <- data[indices, ]
@@ -58,8 +59,8 @@ bootstrap_map <- function(data, n_iterations) {
 }
 
 # Run bootstrap MAP analysis
-inpain_suggested_factors <- bootstrap_map(inpain.df, n_iterations)
-painfree_suggested_factors <- bootstrap_map(painfree.df, n_iterations)
+inpain_suggested_factors <- bootstrap_map(inpain.df, boot_iterations)
+painfree_suggested_factors <- bootstrap_map(painfree.df, boot_iterations)
 
 # Save final output
 saveRDS(list(inpain_suggested_factors = inpain_suggested_factors,
@@ -72,16 +73,25 @@ combined_df <- rbind(
   data.frame(Group = "Painfree", SuggestedFactors = painfree_suggested_factors)
 )
 
-# Plot histograms of number of factors side by side
-nfactors_hist <- ggplot(combined_df, aes(x = SuggestedFactors)) +
-  geom_histogram(binwidth = 1, color = "black", fill = "white") +
-  scale_x_continuous(breaks = seq(floor(min(combined_df$SuggestedFactors)), ceiling(max(combined_df$SuggestedFactors)), by = 1)) +
-  facet_grid(. ~ Group) +
-  labs(title = "Suggested Number of Factors", x = "Number of Factors", y = "Count")
+# Plot histogram of number of factors side by side and save as PDF
+create_nfactors_hist <- function(iteration_number, combined_df) {
+  # Plot histogram of number of factors side by side
+  nfactors_hist <- ggplot(combined_df, aes(x = SuggestedFactors)) +
+    geom_histogram(binwidth = 1, color = "black", fill = "white") +
+    scale_x_continuous(breaks = seq(floor(min(combined_df$SuggestedFactors)), ceiling(max(combined_df$SuggestedFactors)), by = 1)) +
+    facet_grid(. ~ Group) +
+    labs(title = "Suggested Number of Factors", x = "Number of Factors", y = "Count")
+  
+  # Create a filename using the iteration number
+  filename <- paste0("nfactors_histogram_", iteration_number, ".pdf")
+  
+  # Print and save the plot to a PDF
+  print(nfactors_hist)
+  ggsave(filename, plot = nfactors_hist, device = "pdf")
+}
 
-# Print and save the plot to a PDF
-print(nfactors_hist)
-ggsave("nfactors_histogram.pdf", plot = nfactors_hist, device = "pdf")
+# Save plot
+create_nfactors_hist(iteration_number, combined_df)
 
 # Function to decide on the number of factors to retain
 decide_on_factors <- function(suggested_factors) {
