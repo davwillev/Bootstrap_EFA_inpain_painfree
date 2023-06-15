@@ -10,9 +10,8 @@ lapply(packages, function(x) {
   }
 })
 
-# Define the upper and lower thresholds to filter items based on their factor loadings
-upper_threshold = 0.3
-lower_threshold = -0.3
+# Define the absolute threshold to filter items based on their factor loadings
+absolute_threshold = 0.3
 
 # Load data from RDS
 iteration_number <- readRDS("iteration_number.rds")
@@ -311,60 +310,89 @@ print(painfree_procrustes_summary)
 print(inpain_avg_residmat)
 print(painfree_avg_residmat)
 
-# Filter items in a data frame based on factor loadings
-filter_factor_items <- function(df1, df2, upper_threshold, lower_threshold) {
+# Define a function to filter and rename columns in a data frame
+filter_and_rename <- function(df, threshold) {
+  df <- df %>%
+    filter(abs(mean) >= threshold) %>%
+    mutate(
+      CI = paste0("[", round(lower, 3), ", ", round(upper, 3), "]"),
+      direction = ifelse(mean < 0, "negative", "positive")
+    )
+  return(df)
+}
+
+# Define a function to check cross loadings
+check_cross_loadings <- function(items, threshold) {
+  items <- items %>%
+    mutate(over_threshold = if_else(abs(mean) > threshold, 1, 0)) %>%
+    group_by(Item) %>%
+    summarise(total_cross_loadings = sum(over_threshold)) %>%
+    filter(total_cross_loadings > 1)
   
-  # Define a helper function that will filter and rename columns in a data frame.
-  filter_and_rename <- function(df, threshold, mean_name, ci_name) {
-    # Filter the data frame based on the mean column values and threshold.
-    # We also create a new CI column here that combines lower and upper values.
-    df <- df %>% 
-      filter(mean > upper_threshold | mean < lower_threshold) %>%
-      mutate(CI = paste0("[", round(lower, 3), ", ", round(upper, 3), "]")) %>%
-      select(Item, Factor, mean, CI)
-    
-    # Rename the mean and CI columns for clarity.
-    names(df)[3:4] <- c(mean_name, ci_name)
-    return(df)
-  }
+  return(items)
+}
+
+# Define a function to get common factor items
+filter_factor_items <- function(df1, df2, threshold) {
+  # Filter and rename columns for each data frame
+  items1 <- filter_and_rename(df1, threshold)
+  items2 <- filter_and_rename(df2, threshold)
   
-  # Define required columns.
-  required_columns <- c("Item", "Factor", "mean", "lower", "upper")
-  # Check if both df1 and df2 contain required columns, else throw an error.
-  if (!all(required_columns %in% names(df1)) | !all(required_columns %in% names(df2))) {
-    stop("Both df1 and df2 should contain columns: Item, Factor, mean, lower, upper")
-  }
+  # Check for cross loadings
+  cross_loaded_items1 <- check_cross_loadings(items1, threshold)
+  cross_loaded_items2 <- check_cross_loadings(items2, threshold)
   
-  # Use the helper function to filter and rename columns in df1 and df2.
-  items1 <- filter_and_rename(df1, upper_threshold, "mean.df1", "CI.df1")
-  items2 <- filter_and_rename(df2, lower_threshold, "mean.df2", "CI.df2")
+  # Filter out cross loaded items
+  items1 <- filter(items1, !Item %in% cross_loaded_items1$Item)
+  items2 <- filter(items2, !Item %in% cross_loaded_items2$Item)
   
-  # Identify items that are common in both summaries.
-  common_items <- items1 %>% inner_join(items2, by = c("Item", "Factor"))
+  # Get common items
+  common_items <- inner_join(items1, items2, by = c("Item", "Factor"))
   
-  # If there are no common items, create an empty data frame with the same column names.
-  if (nrow(common_items) == 0) {
-    common_items <- data.frame(Item=character(), Factor=character(), mean.df1=numeric(), CI.df1=character(), mean.df2=numeric(), CI.df2=character())
-  }
+  # Renaming columns
+  common_items <- common_items %>%
+    rename(mean.df1 = mean.x,
+           CI.df1 = CI.x,
+           direction.df1 = direction.x,
+           mean.df2 = mean.y,
+           CI.df2 = CI.y,
+           direction.df2 = direction.y)
   
-  # Return the common_items data frame.
   return(common_items)
 }
 
-# Filter items and save
-common_items <- filter_factor_items(inpain_summary, painfree_summary, upper_threshold, lower_threshold)
+# Get common items
+common_items <- filter_factor_items(inpain_summary, painfree_summary, absolute_threshold)
 print(common_items)
 saveRDS(common_items, "common_items.rds")
 
-# Get the list of common items
-common_items_list <- unique(common_items$Item)
-num_common_items <- (length(common_items_list))
-saveRDS(num_common_items, "num_common_items.rds")
+# Function to save the number of common items and the common items list
+save_common_items_info <- function(common_items) {
+  common_items_list <- unique(common_items$Item)
+  num_common_items <- length(common_items_list)
+  
+  # Save these to RDS
+  saveRDS(num_common_items, "num_common_items.rds")
+  saveRDS(common_items_list, "common_items_list.rds")
+}
 
-# Filter the original data frames
-inpain.df <- inpain.df[, common_items_list]
-painfree.df <- painfree.df[, common_items_list]
+# Save common items info
+save_common_items_info(common_items)
 
-# Save each dataframe to an RDS file
+# Function to filter the original data frames
+filter_original_dfs <- function(df1, df2, common_items) {
+  common_items_list <- unique(common_items$Item)
+  df1 <- df1[, common_items_list, drop = FALSE]
+  df2 <- df2[, common_items_list, drop = FALSE]
+  
+  return(list(df1, df2))
+}
+
+# Filter the original data frames and save them
+filtered_dfs <- filter_original_dfs(inpain.df, painfree.df, common_items)
+inpain.df <- filtered_dfs[[1]]
+painfree.df <- filtered_dfs[[2]]
+
+# Save each data frame to an RDS file
 saveRDS(inpain.df, "inpain_df.rds")
 saveRDS(painfree.df, "painfree_df.rds")

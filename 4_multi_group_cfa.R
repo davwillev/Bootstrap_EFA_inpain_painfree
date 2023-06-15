@@ -19,7 +19,9 @@ factors <- readRDS("factors.rds")
 inpain_efa <- readRDS("inpain_efa.rds")
 painfree_efa <- readRDS("painfree_efa.rds")
 combined_summary <- readRDS("combined_summary.rds")
-common_items <- readRDS("common_items.rds")
+num_common_items <- readRDS("num_common_items.rds")
+common_items_list <- readRDS("common_items_list.rds")
+
 
 # Add 'group' variable to each dataframe
 inpain.df$group <- 'inpain'
